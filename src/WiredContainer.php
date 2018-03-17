@@ -243,6 +243,36 @@ class WiredContainer extends Container
    }
 
    /**
+    * Sets the optional list of additional namespaces, used to resolve relative Class names.
+    *
+    * @param array $namespaces
+    * @return \Niirrty\PimpleWired\WiredContainer
+    * @throws \InvalidArgumentException If a invalid namespace format is used.
+    */
+   public function addResolveNamespaces( array $namespaces = [] ) : WiredContainer
+   {
+
+      // Check if all namespaces use a valid format
+      foreach ( $namespaces as $namespace )
+      {
+         if ( ! \is_string( $namespace ) )
+         {
+            throw new \InvalidArgumentException(
+               'Invalid wired container resolve-namespace format! ' .
+               'It must be a string and it must be a valid absolute namespace.'
+            );
+         }
+         if ( ! \in_array( $namespace, $this->_resolveNamespaces, true ) )
+         {
+            $this->_resolveNamespaces[] = $namespace;
+         }
+      }
+
+      return $this;
+
+   }
+
+   /**
     * Sets a associative array with service aliases.
     *
     * It can be used to resolve interfaces to implementations, e.g.:
@@ -268,6 +298,58 @@ class WiredContainer extends Container
       }
 
       $this->_aliases = $aliases;
+
+      return $this;
+
+   }
+
+   /**
+    * Sets a service alias.
+    *
+    * It can be used to resolve interfaces to implementations, e.g.:
+    *
+    * <code>
+    * $container->setAlias( '\\Foo\\BarInterface', '\\Foo\\Bar' );
+    * </code>
+    *
+    * @param  string $alias
+    * @param  string $className
+    * @return \Niirrty\PimpleWired\WiredContainer
+    */
+   public function setAlias( string $alias, string $className ) : WiredContainer
+   {
+
+      $this->_aliases[ $alias ] = $className;
+
+      return $this;
+
+   }
+
+   /**
+    * Adds service aliases.
+    *
+    * It can be used to resolve interfaces to implementations, e.g.:
+    *
+    * <code>
+    * [ '\\Foo\\BarInterface' => '\\Foo\\Bar' ]
+    * </code>
+    *
+    * @param array $aliases
+    * @return \Niirrty\PimpleWired\WiredContainer
+    * @throws \InvalidArgumentException If a invalid alias format is used.
+    */
+   public function addAliases( array $aliases = [] ) : WiredContainer
+   {
+
+      // Check if all namespaces use a valid format
+      foreach ( $aliases as $k => $v )
+      {
+         if ( ! \is_string( $k ) || ! \is_string( $v ) )
+         {
+            throw new \InvalidArgumentException( 'Invalid wired container alias format!' );
+         }
+         $this->_aliases[ $k ] = $v;
+      }
 
       return $this;
 
@@ -305,6 +387,81 @@ class WiredContainer extends Container
    {
 
       $this->_createArgs = $createArgs;
+
+      return $this;
+
+   }
+
+   /**
+    * Sets a absolute class name and additional, tailing constructor arguments
+    *
+    * Assuming "\Foo\Bar" has the constructor signature
+    *
+    * <code>
+    * (\Foo\Baz $baz, $someArg )
+    * </code>
+    *
+    * then the following can inject $someArg:
+    *
+    * <code>
+    * $container->aetCreateArg( '\\Vendor\\Foo', [ 'Arg value' ] );
+    * </code>
+    *
+    * Alternatively a callback for constructor argument generation can be used:
+    *
+    * <code>
+    * [ '\\Vendor\\Foo' => function ( array $autoArgs, $className, WiredContainer $p)
+    *    {
+    *       return \array_merge( $autoArgs, [ 'Some Arg' ] );
+    *    }
+    * ) ]
+    * </code>
+    *
+    * @param  string         $className
+    * @param  callable|array $args
+    * @return \Niirrty\PimpleWired\WiredContainer
+    */
+   public function setCreateArg( string $className, $args ) : WiredContainer
+   {
+
+      $this->_createArgs[ $className ] = $args;
+
+      return $this;
+
+   }
+
+   /**
+    * Sets a associative array with absolute class names and additional, tailing constructor arguments
+    *
+    * Assuming "\Foo\Bar" has the constructor signature
+    *
+    * <code>
+    * (\Foo\Baz $baz, $someArg )
+    * </code>
+    *
+    * then the following can inject $someArg:
+    *
+    * <code>
+    * [ '\\Vendor\\Foo' => [ 'Arg value' ] ]
+    * </code>
+    *
+    * Alternatively a callback for constructor argument generation can be used:
+    *
+    * <code>
+    * [ '\\Vendor\\Foo' => function ( array $autoArgs, $className, WiredContainer $p)
+    *    {
+    *       return \array_merge( $autoArgs, [ 'Some Arg' ] );
+    *    }
+    * ) ]
+    * </code>
+    *
+    * @param \string[] $createArgs
+    * @return \Niirrty\PimpleWired\WiredContainer
+    */
+   public function removeCreateArg( string $className ) : WiredContainer
+   {
+
+      unset( $this->_createArgs[ $className ] );
 
       return $this;
 
